@@ -65,9 +65,9 @@ section "EXECUÇÃO INICIADA"
 
 log "Início do ciclo de atualização"
 
-run_cmd "APT UPDATE" apt-get update
-run_cmd "APT UPGRADE" apt-get -y upgrade
-run_cmd "APT AUTOREMOVE" apt-get -y autoremove
+run_cmd "APT UPDATE" apt update
+run_cmd "APT UPGRADE" apt upgrade -y
+run_cmd "APT AUTOREMOVE" apt autoremove -y
 
 log "Fim do ciclo de atualização"
 section "EXECUÇÃO FINALIZADA"
@@ -93,7 +93,7 @@ Description=Timer de atualização automática do Linux Mint
 
 [Timer]
 OnBootSec=10min
-OnUnitActiveSec=1h
+OnUnitActiveSec=15min
 Persistent=true
 
 [Install]
