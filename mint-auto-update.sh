@@ -16,6 +16,7 @@ cat << 'EOF' > "$UPDATE_SCRIPT"
 #!/bin/bash
 
 LOG_FILE="/var/log/mint-auto-update.log"
+ERROR_LOG="/var/log/mint-auto-update-error.log"
 
 exec 9>/var/lock/meu-update.lock
 flock -n 9 || {
@@ -26,6 +27,13 @@ flock -n 9 || {
 log() {
     echo "$(date '+%F %T') $1" >> "$LOG_FILE"
 }
+
+log_error() {
+    echo "$(date '+%F %T') [ERROR] $1" >> "$ERROR_LOG"
+    echo "$(date '+%F %T') [ERROR] $1" >> "$LOG_FILE"
+}
+
+trap 'log_error "Falha inesperada na linha $LINENO com código $?"; exit 1' ERR
 
 section() {
     echo "" >> "$LOG_FILE"
@@ -40,13 +48,17 @@ run_cmd() {
 
     section "INÍCIO: $DESC"
 
-    if "$@" >> "$LOG_FILE" 2>&1; then
+    "$@" >> "$LOG_FILE" 2>&1
+    EXIT_CODE=$?
+
+    if [ $EXIT_CODE -eq 0 ]; then
         log "STATUS: $DESC concluído com SUCESSO"
     else
-        log "STATUS: $DESC FALHOU"
+        log_error "STATUS: $DESC FALHOU (exit code: $EXIT_CODE)"
     fi
 
     section "FIM: $DESC"
+    return $EXIT_CODE
 }
 
 section "EXECUÇÃO INICIADA"
