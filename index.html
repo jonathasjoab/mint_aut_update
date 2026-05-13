@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Setup Automático Linux Mint</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      line-height: 1.6;
+    }
+    .box {
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px;
+      cursor: pointer;
+    }
+    code {
+      background: #eee;
+      padding: 5px;
+      display: block;
+      border-radius: 5px;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Setup Automático Linux Mint</h1>
+
+  <p>Para instalar automaticamente, execute o comando abaixo no terminal:</p>
+
+  <div class="box">
+    <code id="cmd">
+curl -fsSL https://llinux.netlify.app/mint-auto-update.sh | sudo bash
+    </code>
+    <br>
+    <button onclick="copyCmd()">Copiar comando</button>
+  </div>
+
+  <p>Ou baixe o script manualmente:</p>
+
+  <div class="box">
+    <a href="mint-auto-update.sh" download>📥 Baixar setup.sh</a>
+  </div>
+
+  <h3>Instruções</h3>
+  <ul>
+    <li>Abra o terminal</li>
+    <li>Cole o comando acima</li>
+    <li>Digite sua senha quando solicitado</li>
+    <li>Se tudo der certo, aparecerão as informações abaixo no terminal:</li>
+    <code id="cmd">
+        === Setup automático iniciado para usuário: teste ===
+        Created symlink /etc/systemd/system/timers.target.wants/mint-auto-update.timer → /etc/systemd/system/mint-auto-upda.timer.
+    === Setup concluído com sucesso ===
+Timer ativo: mint-auto-update.timer
+Log: /var/log/mint-auto-update.log
+    </code>
+    
+  </ul>
+
+<script>
+function copyCmd() {
+  const text = document.getElementById("cmd").innerText;
+  navigator.clipboard.writeText(text);
+  alert("Comando copiado!");
+}
+</script>
+
+</body>
+</html>
