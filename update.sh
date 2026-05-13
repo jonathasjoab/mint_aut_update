@@ -3,7 +3,7 @@
 set -e
 
 USER_NAME=${SUDO_USER:-$USER}
-UPDATE_SCRIPT="/usr/local/bin/mint-auto-update.sh"
+UPDATE_SCRIPT="/usr/local/bin/update.sh"
 
 SERVICE_FILE="/etc/systemd/system/mint-auto-update.service"
 TIMER_FILE="/etc/systemd/system/mint-auto-update.timer"
