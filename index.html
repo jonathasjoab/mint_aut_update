@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Atualizações Automáticas Linux Mint</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      line-height: 1.6;
+    }
+    .box {
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px;
+      cursor: pointer;
+    }
+    code {
+      background: #eee;
+      padding: 5px;
+      display: block;
+      border-radius: 5px;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Atualização Automática - instalação de script</h1>
+
+  <p>Para instalar automaticamente, execute o comando abaixo no terminal:</p>
+
+  <div class="box">
+    <code id="cmd">
+curl -fsSL https://jonathasjoab.github.io/mint_aut_update/update.sh | sudo bash
+    </code>
+    <br>
+    <button onclick="copyCmd()">Copiar comando</button>
+  </div>
+
+  <p>Ou baixe o script manualmente:</p>
+
+  <div class="box">
+    <a href="update.sh" download>📥 Baixar setup.sh</a>
+  </div>
+
+  <h3>Instruções</h3>
+  <ul>
+    <li>Abra o terminal: <b>Menu Principal > Administração > Terminal</b></li>
+    
+    <li>Cole o comando copiado <b>(basta clicar com o botão direito do mouse, dentro do terminal e escolher a opção "Colar")</b></li>
+    <li>Digite sua senha quando solicitado</li>
+    <li>Se tudo der certo, aparecerão as informações no terminal, como no exemplo abaixo:</li>
+    <img src="terminal.png">
+  </ul>
+
+<script>
+function copyCmd() {
+  const text = document.getElementById("cmd").innerText;
+  navigator.clipboard.writeText(text);
+  alert("Comando copiado!");
+}
+</script>
+
+</body>
+</html>
