@@ -15,10 +15,13 @@ echo "=== Setup automático iniciado para usuário: $USER_NAME ==="
 cat << 'EOF' > "$UPDATE_SCRIPT"
 #!/bin/bash
 
+set -euo pipefail
+
 LOG_FILE="/var/log/mint-auto-update.log"
 ERROR_LOG="/var/log/mint-auto-update-error.log"
+LOCK_FILE="/var/lock/meu-update.lock"
 
-exec 9>/var/lock/meu-update.lock
+exec 9>"$LOCK_FILE"
 flock -n 9 || {
     echo "$(date '+%F %T') [LOCK] Já existe uma execução em andamento." >> "$LOG_FILE"
     exit 1
@@ -36,10 +39,12 @@ log_error() {
 trap 'log_error "Falha inesperada na linha $LINENO com código $?"; exit 1' ERR
 
 section() {
-    echo "" >> "$LOG_FILE"
-    echo "===============================" >> "$LOG_FILE"
-    echo "$1" >> "$LOG_FILE"
-    echo "===============================" >> "$LOG_FILE"
+    {
+        echo ""
+        echo "==============================="
+        echo "$1"
+        echo "==============================="
+    } >> "$LOG_FILE"
 }
 
 run_cmd() {
@@ -51,7 +56,7 @@ run_cmd() {
     "$@" >> "$LOG_FILE" 2>&1
     EXIT_CODE=$?
 
-    if [ $EXIT_CODE -eq 0 ]; then
+    if [ "$EXIT_CODE" -eq 0 ]; then
         log "STATUS: $DESC concluído com SUCESSO"
     else
         log_error "STATUS: $DESC FALHOU (exit code: $EXIT_CODE)"
@@ -62,12 +67,24 @@ run_cmd() {
 }
 
 section "EXECUÇÃO INICIADA"
-
 log "Início do ciclo de atualização"
 
+# Atualiza índices
 run_cmd "APT UPDATE" apt update
-run_cmd "APT UPGRADE" apt upgrade -y
-run_cmd "APT AUTOREMOVE" apt autoremove -y
+
+# Detecta updates reais (ignorando cabeçalho)
+UPDATES_COUNT=$(apt list --upgradable 2>/dev/null | tail -n +2 | wc -l)
+
+log "Pacotes atualizáveis encontrados: $UPDATES_COUNT"
+
+if [ "$UPDATES_COUNT" -gt 0 ]; then
+    log "Atualizações disponíveis. Iniciando upgrade..."
+
+    run_cmd "APT UPGRADE" apt upgrade -y
+    run_cmd "APT AUTOREMOVE" apt autoremove -y
+else
+    log "Nenhuma atualização disponível. Pulando upgrade e autoremove."
+fi
 
 log "Fim do ciclo de atualização"
 section "EXECUÇÃO FINALIZADA"
@@ -86,14 +103,14 @@ Type=oneshot
 ExecStart=$UPDATE_SCRIPT
 EOF
 
-# 3. Criar timer systemd
+# 3. Criar timer systemd (ajustado para não ser agressivo demais)
 cat << EOF > "$TIMER_FILE"
 [Unit]
 Description=Timer de atualização automática do Linux Mint
 
 [Timer]
 OnBootSec=10min
-OnUnitActiveSec=15min
+OnUnitActiveSec=6h
 Persistent=true
 
 [Install]
@@ -108,10 +125,9 @@ systemctl enable --now mint-auto-update.timer
 touch "$LOG_FILE"
 chmod 644 "$LOG_FILE"
 
-# 6. Ativar linger (opcional, mas solicitado)
+# 6. Ativar linger (opcional)
 loginctl enable-linger "$USER_NAME" || true
 
 echo "=== Setup concluído com sucesso ==="
 echo "Timer ativo: mint-auto-update.timer"
 echo "Log: $LOG_FILE"
-
