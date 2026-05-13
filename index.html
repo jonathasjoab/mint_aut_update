@@ -2,12 +2,14 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Atualizações Automáticas Linux Mint</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       max-width: 700px;
       margin: 40px auto;
+      padding: 0 16px;
       line-height: 1.6;
     }
     .box {
@@ -19,6 +21,7 @@
     button {
       padding: 10px;
       cursor: pointer;
+      margin-top: 4px;
     }
     code {
       background: #eee;
@@ -27,39 +30,42 @@
       border-radius: 5px;
       word-break: break-all;
     }
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin-top: 8px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 <body>
-
   <h1>Atualização Automática - instalação de script</h1>
-
   <p>Para instalar automaticamente, execute o comando abaixo no terminal:</p>
-
   <div class="box">
-    <code id="cmd">
-curl -fsSL https://jonathasjoab.github.io/mint_aut_update/mint-update.sh | sudo bash
-    </code>
+    <code id="cmd">curl -fsSL https://jonathasjoab.github.io/mint_aut_update/mint-update.sh | sudo bash</code>
     <br>
     <button onclick="copyCmd()">Copiar comando</button>
   </div>
-
   <h3>Instruções</h3>
   <ul>
     <li>Abra o terminal: <b>Menu Principal > Administração > Terminal</b></li>
-    
     <li>Cole o comando copiado <b>(basta clicar com o botão direito do mouse, dentro do terminal e escolher a opção "Colar")</b> e dê enter em seguida</li>
     <li>Digite sua senha quando solicitado e aperte enter, novamente</li>
     <li>Se tudo der certo, aparecerão estas informações no terminal, como no exemplo abaixo:</li>
-    <img src="terminal.png">
+    <img src="terminal.png" alt="Exemplo de saída do terminal">
   </ul>
-
-<script>
-function copyCmd() {
-  const text = document.getElementById("cmd").innerText;
-  navigator.clipboard.writeText(text);
-  alert("Comando copiado!");
-}
-</script>
-
+  <script>
+    function copyCmd() {
+      const text = document.getElementById("cmd").innerText.trim();
+      navigator.clipboard.writeText(text);
+      alert("Comando copiado!");
+    }
+  </script>
 </body>
 </html>
