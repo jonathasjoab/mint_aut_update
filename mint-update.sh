@@ -79,7 +79,10 @@ log "Pacotes atualizáveis encontrados: $UPDATES_COUNT"
 if [ "$UPDATES_COUNT" -gt 0 ]; then
     log "Atualizações disponíveis. Iniciando upgrade..."
 
-    run_cmd "APT-GET UPGRADE" apt-get -y upgrade
+    run_cmd "APT-GET UPGRADE" apt-get -y \
+    -o Dpkg::Options::="--force-confdef" \
+    -o Dpkg::Options::="--force-confold" \
+    upgrade
     run_cmd "APT-GET AUTOREMOVE" apt-get -y autoremove
 else
     log "Nenhuma atualização disponível. Pulando upgrade e autoremove."
@@ -99,7 +102,10 @@ After=network.target
 
 [Service]
 Type=oneshot
+Environment=DEBIAN_FRONTEND=noninteractive
+Environment=TERM=xterm
 ExecStart=$UPDATE_SCRIPT
+StandardInput=null
 EOF
 
 # 3. Criar timer systemd
