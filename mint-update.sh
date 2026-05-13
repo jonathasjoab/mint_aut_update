@@ -1,10 +1,9 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 USER_NAME=${SUDO_USER:-$USER}
 UPDATE_SCRIPT="/usr/local/bin/mint-update.sh"
-
 SERVICE_FILE="/etc/systemd/system/mint-auto-update.service"
 TIMER_FILE="/etc/systemd/system/mint-auto-update.timer"
 LOG_FILE="/var/log/mint-auto-update.log"
@@ -16,6 +15,9 @@ cat << 'EOF' > "$UPDATE_SCRIPT"
 #!/bin/bash
 
 set -euo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+export TERM=xterm
 
 LOG_FILE="/var/log/mint-auto-update.log"
 ERROR_LOG="/var/log/mint-auto-update-error.log"
@@ -53,8 +55,8 @@ run_cmd() {
 
     section "INÍCIO: $DESC"
 
-    "$@" >> "$LOG_FILE" 2>&1
-    EXIT_CODE=$?
+    EXIT_CODE=0
+    "$@" >> "$LOG_FILE" 2>&1 || EXIT_CODE=$?
 
     if [ "$EXIT_CODE" -eq 0 ]; then
         log "STATUS: $DESC concluído com SUCESSO"
@@ -73,19 +75,47 @@ log "Início do ciclo de atualização"
 run_cmd "APT-GET UPDATE" apt-get update
 
 # Detecta updates disponíveis
-UPDATES_COUNT=$(apt list --upgradable 2>/dev/null | tail -n +2 | wc -l)
+UPDATES_COUNT=$(apt-get --just-print upgrade 2>/dev/null | grep -c "^Inst" || true)
 log "Pacotes atualizáveis encontrados: $UPDATES_COUNT"
 
 if [ "$UPDATES_COUNT" -gt 0 ]; then
     log "Atualizações disponíveis. Iniciando upgrade..."
 
+    UPGRADE_START=$(date '+%Y-%m-%d %H:%M:%S')
+
     run_cmd "APT-GET UPGRADE" apt-get -y \
-    -o Dpkg::Options::="--force-confdef" \
-    -o Dpkg::Options::="--force-confold" \
-    upgrade
-    run_cmd "APT-GET AUTOREMOVE" apt-get -y autoremove
+        -o Dpkg::Options::="--force-confdef" \
+        -o Dpkg::Options::="--force-confold" \
+        upgrade
+
+    # Lista pacotes atualizados com versão anterior e nova
+    UPGRADED_PKGS=$(awk -v start="$UPGRADE_START" \
+        '$0 >= start && / upgraded / {print "  - " $5, $6, "->", $7}' \
+        /var/log/dpkg.log)
+
+    if [ -n "$UPGRADED_PKGS" ]; then
+        log "Pacotes atualizados:"
+        while IFS= read -r line; do
+            log "$line"
+        done <<< "$UPGRADED_PKGS"
+    fi
+
+    run_cmd "APT-GET AUTOREMOVE" apt-get -y \
+        -o Dpkg::Options::="--force-confdef" \
+        -o Dpkg::Options::="--force-confold" \
+        autoremove
 else
     log "Nenhuma atualização disponível. Pulando upgrade e autoremove."
+fi
+
+# Verifica se reinicialização é necessária
+if [ -f /var/run/reboot-required ]; then
+    log "AVISO: Reinicialização necessária para aplicar as atualizações."
+    if [ -f /var/run/reboot-required.pkgs ]; then
+        log "Pacotes que requerem reboot: $(tr '\n' ' ' < /var/run/reboot-required.pkgs)"
+    fi
+else
+    log "Reinicialização não necessária."
 fi
 
 log "Fim do ciclo de atualização"
@@ -104,8 +134,8 @@ After=network.target
 Type=oneshot
 Environment=DEBIAN_FRONTEND=noninteractive
 Environment=TERM=xterm
-ExecStart=$UPDATE_SCRIPT
 StandardInput=null
+ExecStart=$UPDATE_SCRIPT
 EOF
 
 # 3. Criar timer systemd
