@@ -35,6 +35,26 @@
       height: auto;
       display: block;
       margin-top: 8px;
+      cursor: zoom-in;
+    }
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+      cursor: zoom-out;
+    }
+    #lightbox.open {
+      display: flex;
+    }
+    #lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 6px;
+      cursor: zoom-out;
     }
     ul {
       padding-left: 20px;
@@ -58,14 +78,29 @@
     <li>Cole o comando copiado <b>(basta clicar com o botão direito do mouse, dentro do terminal e escolher a opção "Colar")</b> e dê enter em seguida</li>
     <li>Digite sua senha quando solicitado e aperte enter, novamente</li>
     <li>Se tudo der certo, aparecerão estas informações no terminal, como no exemplo abaixo:</li>
-    <img src="terminal.png" alt="Exemplo de saída do terminal">
+    <img src="terminal.png" alt="Exemplo de saída do terminal" onclick="openLightbox(this)">
   </ul>
+
+  <div id="lightbox" onclick="closeLightbox()">
+    <img id="lightbox-img" src="" alt="Imagem ampliada">
+  </div>
+
   <script>
     function copyCmd() {
       const text = document.getElementById("cmd").innerText.trim();
       navigator.clipboard.writeText(text);
       alert("Comando copiado!");
     }
+    function openLightbox(el) {
+      document.getElementById("lightbox-img").src = el.src;
+      document.getElementById("lightbox").classList.add("open");
+    }
+    function closeLightbox() {
+      document.getElementById("lightbox").classList.remove("open");
+    }
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") closeLightbox();
+    });
   </script>
 </body>
 </html>
